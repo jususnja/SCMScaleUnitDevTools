@@ -22,7 +22,7 @@ namespace ScaleUnitManagement.WorkloadSetupOrchestrator
         {
             if (scaleUnitAosClient is null)
             {
-                scaleUnitAosClient = await AOSClient.Construct(scaleUnit.ResourceId(), scaleUnit.Endpoint());
+                scaleUnitAosClient = await AOSClient.Construct(scaleUnit);
             }
         }
 
@@ -89,7 +89,7 @@ namespace ScaleUnitManagement.WorkloadSetupOrchestrator
 
             await ReliableRun.Execute(async () =>
             {
-                AOSClient hubAosClient = await AOSClient.Construct(Config.HubScaleUnit().ResourceId(), Config.HubScaleUnit().Endpoint());
+                AOSClient hubAosClient = await AOSClient.Construct(Config.HubScaleUnit());
 
                 List<WorkloadInstance> workloadInstances = await new WorkloadInstanceManager(hubAosClient).CreateWorkloadInstances();
 
@@ -105,8 +105,9 @@ namespace ScaleUnitManagement.WorkloadSetupOrchestrator
                         await scaleUnitAosClient.WriteWorkloadInstances(workloadInstanceToInstallList);
                     }
 
-                    if (AxDeployment.IsApplicationVersionMoreRecentThan("10.8.581.0"))
+                    if (scaleUnit.EnvironmentType == EnvironmentType.LBD || AxDeployment.IsApplicationVersionMoreRecentThan("10.8.581.0"))
                         await WaitForWorkloadInstallation(workloadInstance);
+
                 }
             }, "Install workload on scale unit");
         }
